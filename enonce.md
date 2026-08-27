@@ -252,7 +252,10 @@ l'incluent ; `make clean && make` repart de zéro.
    ```
 
    Écrivez **deux implémentations** :
-   - `source_dir` : parcourt un vrai répertoire (`opendir`/`readdir`) ;
+   - `source_dir` : parcourt un vrai répertoire (`opendir`/`readdir`), en se
+     limitant à son premier niveau — pas de descente récursive dans les
+     sous-dossiers (le format d'archive est à plat, les noms d'entrée ne sont
+     pas des chemins) ;
    - `source_synthetic` : génère un corpus **déterministe** de N fichiers à
      partir d'une graine — indispensable pour des tests reproductibles en CI.
 
