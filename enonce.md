@@ -57,6 +57,46 @@ binôme en difficulté ou faire un point collectif sur une notion non acquise.
 
 ---
 
+## Vue d'ensemble — architecture et flux
+
+Le schéma ci-dessous résume l'architecture cible du projet ; les sections
+suivantes en précisent chaque partie.
+
+```text
+main.c (orchestration pure, aucun if/switch)
+ └─ cbx_cli — dispatch par table de pointeurs de fonctions { "pack", do_pack }, …
+     ├─ pack     ─┐
+     ├─ list      │
+     ├─ extract   ├─ cbx_archive — type opaque cbx_archive_t
+     ├─ verify    │    ├─ cbx_source — source des fichiers (callback next) :
+     ├─ info      │    │   source_dir (répertoire) | source_synthetic (tests)
+     ├─ send ─────┼─── cbx_frame (Phase 3 : trames SLIP + CRC16,
+     └─ recv ─────┘    │   canal abstrait fn_read/fn_write)
+                      ├─ cbx_rle    → compression (repli brut si gonfle)
+                      ├─ cbx_crypto → XOR à flot (graine FNV-1a, involutif)
+                      ├─ cbx_crc    → CRC32 (portant sur les données brutes)
+                      └─ cbx_io     → sérialisation little-endian
+                          └─ cbx_format.h (types/constantes du format .cbx)
+```
+
+**Pipeline `pack`** (ordre imposé) : la source fournit chaque fichier →
+`crc32` des données **brutes** (`entry_crc32`) → compression RLE (repli brut
+si le compressé gonfle) → chiffrement XOR → tout est écrit dans l'archive :
+`HEADER + TABLE DES ENTRÉES + DATA`.
+
+**Pipelines inverses** : `extract`/`verify` relisent la zone DATA et
+appliquent la chaîne inverse (XOR⁻¹ puis RLE⁻¹) avant de revérifier
+`entry_crc32` — une mauvaise passphrase est détectée par le CRC (code
+retour 4), jamais par un crash.
+
+**Session type** (cas d'usage d'intégration, cf. annexe A.7) :
+
+```text
+pack ──► verify ──► send ──► [canal octet] ──► recv ──► cmp octet pour octet
+```
+
+---
+
 ## Le format `.cbx` — spécification cadre
 
 Le squelette suivant est **imposé** (il garantit la couverture pédagogique du
