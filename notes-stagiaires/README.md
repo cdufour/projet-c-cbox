@@ -13,6 +13,7 @@ jamais à la place.
 | [`cbx_archive.md`](cbx_archive.md) | `cbx_archive` | Type opaque `cbx_archive_t`, moment des écritures disque, table dynamique, pointeurs et heap |
 | [`cbx_source.md`](cbx_source.md) | `cbx_source` | Abstraction de source par pointeurs de fonctions (`source_dir`, `source_synthetic`) |
 | [`cbx_rle_crypto.md`](cbx_rle_crypto.md) | `cbx_rle`, `cbx_crypto` | Compression RLE (format de paquets, bornes, repli brut) et chiffrement XOR à flot (idées, pièges, limites) |
+| [`cbx_rle_octet_controle.md`](cbx_rle_octet_controle.md) | `cbx_rle` | L'octet de contrôle en détail : littéral `c + 1`, run `(c & 0x7F) + 2`, règle de choix encodeur, préfixe de longueur vs délimiteur, cas limite 128 |
 | [`perimetre-socle-extensions.md`](perimetre-socle-extensions.md) | transverse | Périmètre exigé du projet : socle obligatoire vs extensions valorisées (chiffrement, protocole de trame, bonus) |
 
 ## Comment lire ces notes
