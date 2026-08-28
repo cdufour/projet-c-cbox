@@ -41,7 +41,7 @@ Tout ce qui suit reste **imposé**, tel quel :
   d'erreur), `cbx_format`, `cbx_crc`, `cbx_io`, `cbx_source` (les deux
   implémentations), `build.sh`.
 - **Phase 2 sans le chiffrement** : `cbx_rle` complet (bornes des paquets,
-  repli brut si gonflement, cas limites testés), type opaque `CBoxArchive`,
+  repli brut si gonflement, cas limites testés), type opaque `cbx_archive_t`,
   les cinq sous-commandes `pack`/`list`/`extract`/`verify`/`info` — sans
   `--key` — et le dispatch par pointeurs de fonctions.
 - **Phase 3 hors trames** :

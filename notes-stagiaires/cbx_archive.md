@@ -1,7 +1,7 @@
 # `cbx_archive` — explication pas à pas
 
 > Note formateur destinée aux stagiaires qui découvrent le module
-> `cbx_archive.c` et le type opaque `CBoxArchive` (Phase 2)
+> `cbx_archive.c` et le type opaque `cbx_archive_t` (Phase 2)
 
 ## L'idée en une phrase
 
@@ -33,11 +33,11 @@ on va piocher dans les DATA à l'endroit indiqué.
 Dans `cbx_archive.h`, on ne met qu'une seule ligne :
 
 ```c
-typedef struct cbx_archive CBoxArchive;
+typedef struct cbx_archive cbx_archive_t;
 ```
 
 C'est une **promesse sans détails** : « il existe une structure qui s'appelle
-CBoxArchive, mais son contenu ne regarde que `cbx_archive.c` ». La définition
+cbx_archive_t, mais son contenu ne regarde que `cbx_archive.c` ». La définition
 complète vit en privé dans le `.c`. L'utilisateur de la bibliothèque ne
 manipule jamais la struct directement — il ne passe que des pointeurs aux
 quatre fonctions de l'API. Ça s'appelle un **type opaque**, et c'est ce qui
@@ -45,10 +45,10 @@ force à utiliser l'API proprement.
 
 ## Étape par étape : créer une archive
 
-### 1. `cbox_create("fw.cbx")` — ouvrir le chantier
+### 1. `cbx_archive_create("fw.cbx")` — ouvrir le chantier
 
 ```c
-CBoxArchive *a = cbox_create("fw.cbx");
+cbx_archive_t *a = cbx_archive_create("fw.cbx");
 ```
 
 Ce que ça fait :
@@ -63,7 +63,7 @@ Ce que ça fait :
 À ce stade : **rien n'est écrit sur le disque**. Tout est en mémoire, prêt à
 recevoir.
 
-### 2. `cbox_add_entry(a, &desc)` — ranger un fichier (×N)
+### 2. `cbx_archive_add_entry(a, &desc)` — ranger un fichier (×N)
 
 Appelée **une fois par fichier** à empaqueter. Pour chaque fichier, elle :
 
@@ -83,7 +83,7 @@ Appelée **une fois par fichier** à empaqueter. Pour chaque fichier, elle :
 
 ```c
 while (source.next(source.ctx, &desc) == 1) {
-    cbox_add_entry(a, &desc);   /* répété pour chaque fichier */
+    cbx_archive_add_entry(a, &desc);   /* répété pour chaque fichier */
 }
 ```
 
@@ -97,7 +97,7 @@ struct cbx_archive
 ├── data : [app.bin transformé][config.ini transformé]...
 ```
 
-### 3. `cbox_close(a)` — tout écrire d'un coup
+### 3. `cbx_archive_close(a)` — tout écrire d'un coup
 
 Le grand final. Maintenant qu'on connaît le nombre d'entrées, on peut enfin
 écrire le fichier complet, **dans l'ordre naturel** :
@@ -115,7 +115,7 @@ doit **plus jamais être utilisé**.
 
 ## Et pour lire une archive existante ?
 
-`cbox_open("fw.cbx")` fait le chemin inverse : ouvre en `"rb"`, lit le header
+`cbx_archive_open("fw.cbx")` fait le chemin inverse : ouvre en `"rb"`, lit le header
 via `cbx_read_header`, et **valide** : est-ce vraiment `"CBX1"` ? Version
 connue ? CRC du header correct ? Si non → `NULL` et un message d'erreur. Les
 sous-commandes `list`, `extract`, `verify`, `info` partent de là : elles
@@ -125,15 +125,15 @@ besoin.
 ## Résumé en une image
 
 ```
-cbox_create    →  j'ouvre un carton vide (en mémoire)
-cbox_add_entry →  je plie chaque objet et le pose dans le carton (en mémoire)
-cbox_close     →  j'écris la liste sur le couvercle, je scotte, j'expédie
+cbx_archive_create    →  j'ouvre un carton vide (en mémoire)
+cbx_archive_add_entry →  je plie chaque objet et le pose dans le carton (en mémoire)
+cbx_archive_close     →  j'écris la liste sur le couvercle, je scotte, j'expédie
                    (= j'écris TOUT le fichier, puis je libère la mémoire)
-cbox_open      →  je lis le couvercle pour vérifier que c'est bien un carton CBX
+cbx_archive_open      →  je lis le couvercle pour vérifier que c'est bien un carton CBX
 ```
 
 Le point contre-intuitif à bien intégrer : **le disque n'est touché que par
-`cbox_close`** (dans ce design), alors que le fichier final commence par le
+`cbx_archive_close`** (dans ce design), alors que le fichier final commence par le
 header — qu'on ne pouvait pas écrire avant de savoir combien d'entrées il y
 aurait. Tout buffer en mémoire jusqu'au bout résout élégamment ce problème.
 
@@ -144,7 +144,7 @@ aurait. Tout buffer en mémoire jusqu'au bout résout élégamment ce problème.
 Non — un `fseek` ne déplace pas d'octets, il déplace seulement la position
 d'écriture. Trois designs possibles pour gérer le header écrit en dernier :
 
-1. **Réserver la place dès `cbox_create`** : header provisoire (taille fixe,
+1. **Réserver la place dès `cbx_archive_create`** : header provisoire (taille fixe,
    connue) + zone réservée pour la table (capacité du tableau dynamique, ou
    un maximum généreux). Les DATA sont écrites après la zone réservée, à
    position fixe ; `close` repose header + table dans la place libre. Aucun
@@ -156,7 +156,7 @@ d'écriture. Trois designs possibles pour gérer le header écrit en dernier :
    grosses archives.
 
 La table, elle, reste **contiguë et en un seul bloc** : c'est le contrat du
-format (`cbox_open` lit `entry_count` puis `entry_count` entrées qui se
+format (`cbx_archive_open` lit `entry_count` puis `entry_count` entrées qui se
 suivent). Pas de table fragmentée.
 
 ### « La struct doit contenir un pointeur sur des données très conséquentes dans le heap ? »
@@ -182,7 +182,7 @@ struct cbx_archive {
   « une entrée à la fois » ;
 - corollaire en lecture : `extract`/`verify` ne chargent **jamais** toute la
   zone DATA — `fseek` à `offset`, lecture de `size` octets seulement ;
-- avec `data` dans le heap, l'hygiène de `cbox_close` (tout libérer, y compris
+- avec `data` dans le heap, l'hygiène de `cbx_archive_close` (tout libérer, y compris
   sur les chemins d'erreur) est vérifiée par valgrind sur un pack de 1000
   entrées.
 

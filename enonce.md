@@ -124,7 +124,7 @@ cbox/
 │   ├── cbx_rle.h         ← compression RLE (Phase 2)
 │   ├── cbx_crypto.h      ← chiffrement XOR à flot (Phase 2)
 │   ├── cbx_frame.h       ← protocole de trame (Phase 3)
-│   ├── cbx_archive.h     ← type opaque CBoxArchive (Phase 2)
+│   ├── cbx_archive.h     ← type opaque cbx_archive_t (Phase 2)
 │   └── cbx_cli.h         ← dispatch des sous-commandes (Phase 2)
 ├── src/
 │   ├── main.c            ← orchestration uniquement
@@ -156,7 +156,7 @@ couverture :
 | `cbx_rle.c/h` | Compression RLE par paquets (octet de contrôle, runs bornés, repli brut si gonflement) | Opérateurs bit à bit, bornes et cas limites, tampons *(J2)* |
 | `cbx_crypto.c/h` | Chiffrement XOR à flot : graine dérivée par hash FNV-1a, flot xorshift32/LCG, XOR involutif in place | Manipulation bit à bit, déterminisme, algèbre du XOR *(J2)* |
 | `cbx_frame.c/h` | Protocole de trame maison : délimitation FLAG, échappement à la SLIP, SEQ, CRC16, canal abstrait (`stdio` + `channel_corrupt`) par pointeurs de fonctions | Protocoles binaires, échappement d'octets, pointeurs de fonctions *(J2/J4)* |
-| `cbx_archive.c/h` | **Type opaque** `CBoxArchive` : `cbox_create/open/add_entry/close`, table d'entrées dynamique | Types opaques, pointeurs de pointeurs, `malloc`/`realloc`/`free`, tableaux de pointeurs *(J4, fondamentaux — allocation dynamique)* |
+| `cbx_archive.c/h` | **Type opaque** `cbx_archive_t` : `cbx_archive_create/open/add_entry/close`, table d'entrées dynamique | Types opaques, pointeurs de pointeurs, `malloc`/`realloc`/`free`, tableaux de pointeurs *(J4, fondamentaux — allocation dynamique)* |
 | `cbx_cli.c/h` + `main.c` | **Table de dispatch** de sous-commandes (`pack`/`list`/`extract`/`verify`/`info`/`send`/`recv`) par pointeurs de fonctions | Pointeurs de fonctions, callbacks, `argv` *(J4)* |
 | `scripts/build.sh` | Compilation stricte + smoke test | Shell script |
 | `scripts/run_tests.sh` | Corpus déterministe (`source_synthetic`), pack → extract → verify (± RLE/XOR), send/recv, comparaison `diff -r` | Shell script, boucles, codes de retour |
@@ -297,30 +297,30 @@ propre sur le smoke test.
 
 # PHASE 2 — Bibliothèque d'archive, compression, chiffrement, CLI complet
 
-> Objectif : le cœur métier. Un **type opaque** `CBoxArchive` caché derrière
+> Objectif : le cœur métier. Un **type opaque** `cbx_archive_t` caché derrière
 > une API, les **transformations binaires** des données (RLE, XOR), les cinq
 > sous-commandes, et un dispatch par pointeurs de fonctions.
 
-## Étape 1 — Type opaque `CBoxArchive`
+## Étape 1 — Type opaque `cbx_archive_t`
 
 Dans `cbx_archive.h`, ne déclarez qu'un **type incomplet** :
 
 ```c
-typedef struct cbx_archive CBoxArchive;
+typedef struct cbx_archive cbx_archive_t;
 ```
 
 La définition complète vit dans `cbx_archive.c`. API minimale :
 
 ```c
-CBoxArchive *cbox_create(const char *path);      /* crée/écrase l'archive */
-CBoxArchive *cbox_open(const char *path);        /* ouvre + valide header  */
-int  cbox_add_entry(CBoxArchive *, const cbx_entry_desc *);
-int  cbox_close(CBoxArchive *);                  /* écrit header+table, libère */
+cbx_archive_t *cbx_archive_create(const char *path);      /* crée/écrase l'archive */
+cbx_archive_t *cbx_archive_open(const char *path);        /* ouvre + valide header  */
+int  cbx_archive_add_entry(cbx_archive_t *, const cbx_entry_desc *);
+int  cbx_archive_close(cbx_archive_t *);                  /* écrit header+table, libère */
 ```
 
 La table des entrées est un **tableau dynamique de pointeurs**
 (`malloc`/`realloc`/`free`), grandissant par blocs — pas de limite fixe.
-Toutes les erreurs d'allocation sont traitées ; `cbox_close` libère tout.
+Toutes les erreurs d'allocation sont traitées ; `cbx_archive_close` libère tout.
 
 ## Étape 2 — Compression RLE au niveau octet
 

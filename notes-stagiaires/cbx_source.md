@@ -73,7 +73,7 @@ typedef struct {
 ### `cbx_entry_desc` — « la fiche du colis »
 
 La description d'UN fichier à empaqueter : son nom, sa taille, et de quoi
-lire son contenu. C'est ce que `cbox_add_entry` recevra (cf. la note
+lire son contenu. C'est ce que `cbx_archive_add_entry` recevra (cf. la note
 `cbx_archive`). Le `cbx_archive` ne sait pas d'où vient cette fiche — et
 c'est tout l'intérêt.
 
@@ -127,7 +127,7 @@ cbx_entry_desc desc;
 int r;
 
 while ((r = src.next(src.ctx, &desc)) == 1) {
-    cbox_add_entry(a, &desc);   /* range ce colis dans l'archive */
+    cbx_archive_add_entry(a, &desc);   /* range ce colis dans l'archive */
 }
 if (r < 0) {
     /* erreur de la source : message + code retour dédié */

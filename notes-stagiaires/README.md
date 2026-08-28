@@ -10,7 +10,7 @@ jamais à la place.
 | Note | Module | Sujet |
 | --- | --- | --- |
 | [`cbx_crc.md`](cbx_crc.md) | `cbx_crc` | Checksum CRC32 (algorithme, implémentation, tests) |
-| [`cbx_archive.md`](cbx_archive.md) | `cbx_archive` | Type opaque `CBoxArchive`, moment des écritures disque, table dynamique, pointeurs et heap |
+| [`cbx_archive.md`](cbx_archive.md) | `cbx_archive` | Type opaque `cbx_archive_t`, moment des écritures disque, table dynamique, pointeurs et heap |
 | [`cbx_source.md`](cbx_source.md) | `cbx_source` | Abstraction de source par pointeurs de fonctions (`source_dir`, `source_synthetic`) |
 | [`cbx_rle_crypto.md`](cbx_rle_crypto.md) | `cbx_rle`, `cbx_crypto` | Compression RLE (format de paquets, bornes, repli brut) et chiffrement XOR à flot (idées, pièges, limites) |
 | [`perimetre-socle-extensions.md`](perimetre-socle-extensions.md) | transverse | Périmètre exigé du projet : socle obligatoire vs extensions valorisées (chiffrement, protocole de trame, bonus) |
