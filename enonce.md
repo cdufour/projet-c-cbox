@@ -670,6 +670,18 @@ conception (format, transformations, protocole, gestion d'erreurs).
 Finalisez le `README.md` (usage, architecture, limites connues) avant le tag
 `v1.0`.
 
+**Variante vidéo** : si le binôme préfère ne pas faire de démonstration live,
+il peut livrer à la place une **vidéo courte (moins de 10 minutes), style
+screencast**, couvrant le même contenu. Dans ce cas :
+
+- le `README.md` du dépôt doit fournir le **lien vers l'URL de la vidéo**
+  (attention aux accès : vérifiez que le lien est fonctionnel sans
+  authentification ou avec des droits partagés au formateur) ;
+- ce lien, fonctionnel, doit être fourni **avant le début du prochain module
+  de formation dans le cursus** ;
+- le choix du binôme (live ou vidéo) doit être **indiqué au formateur dans le
+  canal de discussion habituel**.
+
 ---
 
 ## Checklist finale du projet
@@ -686,7 +698,8 @@ Finalisez le `README.md` (usage, architecture, limites connues) avant le tag
 - [ ] `scripts/build.sh`, `run_tests.sh`, `log_report.sh` opérationnels
 - [ ] `RAPPORT-MEMOIRE.md` (sections, symboles, valgrind)
 - [ ] `README.md` (usage, architecture, choix, limites)
-- [ ] Démonstration réalisée
+- [ ] Démonstration réalisée (live, ou vidéo screencast < 10 min avec lien
+      fonctionnel dans le `README.md`)
 
 ---
 
