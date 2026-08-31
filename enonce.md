@@ -663,7 +663,7 @@ Au choix, sans obligation :
 
 ## Étape 7 — Restitution
 
-En fin de journée 3 : **démonstration de 15-20 minutes par binôme** — build
+En fin de journée 3 : **démonstration de 10-15 minutes par binôme** — build
 depuis zéro, pipeline vert sur GitLab, démo live des sous-commandes (dont un
 `send`/`recv` sur flux corrompu), analyse mémoire, et défense de vos choix de
 conception (format, transformations, protocole, gestion d'erreurs).
